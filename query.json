@@ -1,1 +1,0 @@
-{"query":"mutation { login(input: {email: \"test@gmail.com\", password: \"password123\"}) { success message token user { _id email } } }"}

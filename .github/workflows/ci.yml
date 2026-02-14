@@ -1,149 +1,43 @@
 name: CI
+
 on:
-  pull_request:
-    types: [labeled, synchronize, edited]
+  push:
     branches:
-      - main
-    paths-ignore:
-      - '.nxignore'
+      - master
+  pull_request:
 
 permissions:
-  id-token: write
+  actions: read
   contents: read
-  pull-requests: write
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
-  lint:
+  main:
     runs-on: ubuntu-latest
-    if: "${{ github.event.label.name == 'PR status: code ready' }}"
-    timeout-minutes: 10
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '18.19.1'
-      - uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: 1.1.10
-      - run: bun install -y
-        if: "${{ steps.cache-nodemodules.outputs.cache-hit != 'true' }}"
-      - name: Setup Canvas
-        if: "${{ steps.cache-nodemodules.outputs.cache-hit != 'true' }}"
-        run: npm rebuild canvas
-      - uses: nrwl/nx-set-shas@v4
-      - run: git branch --track main origin/main
-      - name: Run lint on affected projects
-        run: bunx nx affected -t lint --parallel=5 --output-style=stream-without-prefixes
 
-  test:
-    runs-on: ubuntu-latest
-    if: "${{ github.event.label.name == 'PR status: code ready' }}"
-    timeout-minutes: 10
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '18.19.1'
-      - uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: 1.1.10
-      - run: bun install -y
-        if: "${{ steps.cache-nodemodules.outputs.cache-hit != 'true' }}"
-      - name: Setup Canvas
-        if: "${{ steps.cache-nodemodules.outputs.cache-hit != 'true' }}"
-        run: npm rebuild canvas
-      - uses: nrwl/nx-set-shas@v4
-      - run: git branch --track main origin/main
-      - name: Run test on affected projects
-        run: bunx nx affected -t test --parallel=5 --output-style=stream-without-prefixes
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Uncomment this line to enable task distribution
+      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
-  build:
-    runs-on: ubuntu-latest
-    if: "${{ github.event.label.name == 'PR status: code ready' }}"
-    timeout-minutes: 10
-    env:
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Cache node_modules
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'yarn'
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '18.19.1'
-      - uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: 1.1.10
-      - run: bun install -y
-      - name: Install Vercel CLI
-        run: bun add --global vercel@latest
-        if: "${{ steps.cache-nodemodules.outputs.cache-hit != 'true' }}"
-      - name: Setup Canvas
-        if: "${{ steps.cache-nodemodules.outputs.cache-hit != 'true' }}"
-        run: npm rebuild canvas
-      - uses: nrwl/nx-set-shas@v4
-      - run: git branch --track main origin/main
-      - name: Get NX BASE and NX HEAD
-        uses: nrwl/nx-set-shas@v4
-      - name: Export NX BASE AND HEAD
-        run: |
-          export NX_BASE=${{ env.NX_BASE }}
-          export NX_HEAD=${{ env.NX_HEAD }}
-          export VERCEL_TOKEN=${{ env.VERCEL_TOKEN }}
-          export GITHUB_TOKEN=${{ env.GITHUB_TOKEN }}
-          bash ./tools/scripts/export-action-env.sh
-      - name: Run build on affected projects
-        run: bunx nx affected -t build --parallel=5 --output-style=stream-without-prefixes
+      - run: yarn install --frozen-lockfile
+      - run: yarn cypress install
 
-  preview-and-E2E:
-    runs-on: ubuntu-latest
-    if: "${{ github.event.label.name == 'PR status: code ready' }}"
-    timeout-minutes: 10
-    env:
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN  }}
-      ACTION_TYPE: PULL_REQUEST_ACTION
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '18.19.1'
-      - uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: 1.1.10
-      - run: bun install -y
-      - name: Install Vercel CLI
-        run: bun add --global vercel@latest
-        if: "${{ steps.cache-nodemodules.outputs.cache-hit != 'true' }}"
-      - name: Install Cypress
-        run: bunx cypress install
-      - name: Setup Canvas
-        if: "${{ steps.cache-nodemodules.outputs.cache-hit != 'true' }}"
-        run: npm rebuild canvas
-      - name: Get NX BASE and NX HEAD
-        uses: nrwl/nx-set-shas@v4
-      - name: Export NX BASE AND HEAD
-        run: |
-          export NX_BASE=${{ env.NX_BASE }}
-          export NX_HEAD=${{ env.NX_HEAD }}
-          export VERCEL_TOKEN=${{ env.VERCEL_TOKEN }}
-          export GITHUB_TOKEN=${{ env.GITHUB_TOKEN }}
-          bash ./tools/scripts/export-action-env.sh
-      - name: Generate Preview Links
-        run: bunx nx preview-action scripts
+      # Prepend any command with "nx record --" to record its logs to Nx Cloud
+      # - run: yarn nx record -- echo Hello World
+      # When you enable task distribution, run the e2e-ci task instead of e2e
+      - run: yarn nx run-many -t lint test build typecheck e2e
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      - run: yarn nx fix-ci
+        if: always()
