@@ -1,0 +1,1166 @@
+{
+  "graph": {
+    "nodes": {
+      "client": {
+        "name": "client",
+        "type": "app",
+        "data": {
+          "root": "apps/example/client",
+          "targets": {
+            "build": {
+              "options": {
+                "cwd": "apps/example/client",
+                "tty": false,
+                "command": "next build"
+              },
+              "dependsOn": [
+                "^build"
+              ],
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "next"
+                  ]
+                }
+              ],
+              "outputs": [
+                "{workspaceRoot}/apps/example/client/.next/!(cache)/**/*",
+                "{workspaceRoot}/apps/example/client/.next/!(cache)"
+              ],
+              "syncGenerators": [
+                "@nx/js:typescript-sync"
+              ],
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "dev": {
+              "continuous": true,
+              "options": {
+                "cwd": "apps/example/client",
+                "command": "next dev"
+              },
+              "syncGenerators": [
+                "@nx/js:typescript-sync"
+              ],
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "start": {
+              "continuous": true,
+              "options": {
+                "cwd": "apps/example/client",
+                "command": "next start"
+              },
+              "dependsOn": [
+                "build"
+              ],
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "serve-static": {
+              "continuous": true,
+              "options": {
+                "cwd": "apps/example/client",
+                "command": "next start"
+              },
+              "dependsOn": [
+                "build"
+              ],
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "build-deps": {
+              "dependsOn": [
+                "^build"
+              ],
+              "configurations": {},
+              "options": {},
+              "parallelism": true,
+              "executor": "nx:noop"
+            },
+            "watch-deps": {
+              "continuous": true,
+              "dependsOn": [
+                "build-deps"
+              ],
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "yarn nx watch --projects client --includeDependentProjects -- yarn nx build-deps client"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "lint": {
+              "executor": "@nx/eslint:lint",
+              "outputs": [
+                "{options.outputFile}"
+              ],
+              "options": {
+                "lintFilePatterns": [
+                  "apps/example/client/**/*.{ts,tsx,js,jsx}"
+                ]
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test": {
+              "options": {
+                "cwd": "apps/example/client",
+                "env": {
+                  "TS_NODE_COMPILER_OPTIONS": "{\"moduleResolution\":\"node10\",\"module\":\"commonjs\",\"customConditions\":null}"
+                },
+                "command": "jest"
+              },
+              "metadata": {
+                "technologies": [
+                  "jest"
+                ],
+                "description": "Run Jest Tests",
+                "help": {
+                  "command": "yarn jest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                "{workspaceRoot}/jest.preset.js",
+                {
+                  "externalDependencies": [
+                    "jest"
+                  ]
+                }
+              ],
+              "outputs": [
+                "{workspaceRoot}/coverage/apps/example/client"
+              ],
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true,
+              "dependsOn": [
+                "^build"
+              ]
+            },
+            "serve": {
+              "executor": "@nx/next:server",
+              "defaultConfiguration": "development",
+              "options": {
+                "buildTarget": "client:build",
+                "dev": true
+              },
+              "configurations": {
+                "development": {
+                  "buildTarget": "client:build:development",
+                  "dev": true
+                },
+                "production": {
+                  "buildTarget": "client:build:production",
+                  "dev": false
+                }
+              },
+              "dependsOn": [
+                {
+                  "target": "graphql-codegen"
+                }
+              ],
+              "parallelism": true,
+              "continuous": true
+            },
+            "export": {
+              "executor": "@nx/next:export",
+              "options": {
+                "buildTarget": "client:build:production"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "get-secrets:dev": {
+              "executor": "@pinecone-intern-monorepo/secrets:get",
+              "defaultConfiguration": "development",
+              "configurations": {
+                "development": {
+                  "groups": [
+                    "client"
+                  ],
+                  "env": "dev"
+                }
+              },
+              "options": {},
+              "parallelism": true
+            },
+            "get-secrets:testing": {
+              "executor": "@pinecone-intern-monorepo/secrets:get",
+              "defaultConfiguration": "testing",
+              "configurations": {
+                "testing": {
+                  "groups": [
+                    "client"
+                  ],
+                  "env": "test"
+                }
+              },
+              "options": {},
+              "parallelism": true
+            },
+            "get-secrets:prod": {
+              "executor": "@pinecone-intern-monorepo/secrets:get",
+              "defaultConfiguration": "production",
+              "configurations": {
+                "production": {
+                  "groups": [
+                    "client"
+                  ],
+                  "env": "prod"
+                }
+              },
+              "options": {},
+              "parallelism": true
+            },
+            "graphql-codegen": {
+              "executor": "nx:run-commands",
+              "options": {
+                "commands": [
+                  "npx env-cmd -f apps/example/client/.env graphql-codegen --config ./apps/example/client/graphql-codegen.yml"
+                ]
+              },
+              "dependsOn": [
+                {
+                  "target": "get-secrets:testing"
+                }
+              ],
+              "configurations": {},
+              "parallelism": true
+            },
+            "export-env": {
+              "executor": "nx:run-commands",
+              "options": {
+                "commands": [
+                  "export $(cat apps/example/client/.env | xargs)"
+                ],
+                "parallel": false
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "clean": {
+              "executor": "nx:run-commands",
+              "options": {
+                "commands": [
+                  "rm -rf dist/apps/example/client",
+                  "rm -rf .vercel"
+                ]
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "deploy-dev": {
+              "executor": "nx:run-commands",
+              "options": {
+                "commands": [
+                  "npx dotenv -v VERCEL_ORG_ID=team_0ASDilhqwPl5fll9OnzqDM30 -v VERCEL_PROJECT_ID=prj_zPjwQ5Ljok5ZIVnKA1YoTAtBwnIC -- vercel pull --yes --environment=production --token=$VERCEL_TOKEN",
+                  "vercel build --prod --token=$VERCEL_TOKEN",
+                  "npx dotenv -v VERCEL_ORG_ID=team_0ASDilhqwPl5fll9OnzqDM30 -v VERCEL_PROJECT_ID=prj_zPjwQ5Ljok5ZIVnKA1YoTAtBwnIC -- vercel --prebuilt --prod --token=$VERCEL_TOKEN"
+                ],
+                "parallel": false
+              },
+              "dependsOn": [
+                {
+                  "target": "clean"
+                },
+                {
+                  "target": "get-secrets:dev"
+                },
+                {
+                  "target": "export-env"
+                },
+                {
+                  "target": "graphql-codegen"
+                }
+              ],
+              "configurations": {},
+              "parallelism": true
+            },
+            "deploy-prod": {
+              "executor": "nx:run-commands",
+              "options": {
+                "commands": [
+                  "npx dotenv -v VERCEL_ORG_ID=team_0ASDilhqwPl5fll9OnzqDM30 -v VERCEL_PROJECT_ID=prj_W7s8bXKcYpssc3WZsBdsZrJLzlF4 -- vercel pull --yes --environment=production --token=$VERCEL_TOKEN",
+                  "vercel build --prod --token=$VERCEL_TOKEN",
+                  "npx dotenv -v VERCEL_ORG_ID=team_0ASDilhqwPl5fll9OnzqDM30 -v VERCEL_PROJECT_ID=prj_W7s8bXKcYpssc3WZsBdsZrJLzlF4 -- vercel --prebuilt --prod --token=$VERCEL_TOKEN"
+                ],
+                "parallel": false
+              },
+              "dependsOn": [
+                {
+                  "target": "clean"
+                },
+                {
+                  "target": "get-secrets:prod"
+                },
+                {
+                  "target": "export-env"
+                },
+                {
+                  "target": "graphql-codegen",
+                  "params": "forward"
+                }
+              ],
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "name": "client",
+          "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "apps/example/client",
+          "projectType": "application",
+          "tags": [],
+          "implicitDependencies": []
+        }
+      },
+      "server": {
+        "name": "server",
+        "type": "app",
+        "data": {
+          "root": "apps/example/server",
+          "targets": {
+            "build": {
+              "executor": "@nx/next:build",
+              "outputs": [
+                "{options.outputPath}"
+              ],
+              "defaultConfiguration": "production",
+              "options": {
+                "outputPath": "dist/apps/example/server"
+              },
+              "configurations": {
+                "development": {
+                  "outputPath": "apps/example/server"
+                },
+                "production": {}
+              },
+              "dependsOn": [
+                {
+                  "target": "graphql-codegen"
+                }
+              ],
+              "parallelism": true
+            },
+            "dev": {
+              "continuous": true,
+              "options": {
+                "cwd": "apps/example/server",
+                "command": "next dev"
+              },
+              "syncGenerators": [
+                "@nx/js:typescript-sync"
+              ],
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "start": {
+              "continuous": true,
+              "options": {
+                "cwd": "apps/example/server",
+                "command": "next start"
+              },
+              "dependsOn": [
+                "build"
+              ],
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "serve-static": {
+              "continuous": true,
+              "options": {
+                "cwd": "apps/example/server",
+                "command": "next start"
+              },
+              "dependsOn": [
+                "build"
+              ],
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "build-deps": {
+              "dependsOn": [
+                "^build"
+              ],
+              "configurations": {},
+              "options": {},
+              "parallelism": true,
+              "executor": "nx:noop"
+            },
+            "watch-deps": {
+              "continuous": true,
+              "dependsOn": [
+                "build-deps"
+              ],
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "yarn nx watch --projects server --includeDependentProjects -- yarn nx build-deps server"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "lint": {
+              "executor": "@nx/eslint:lint",
+              "outputs": [
+                "{options.outputFile}"
+              ],
+              "options": {
+                "lintFilePatterns": [
+                  "apps/example/server/**/*.{ts,tsx,js,jsx}"
+                ]
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test": {
+              "executor": "@nx/jest:jest",
+              "outputs": [
+                "{workspaceRoot}/coverage/{projectRoot}"
+              ],
+              "options": {
+                "jestConfig": "apps/example/server/jest.config.ts",
+                "codeCoverage": true,
+                "passWithNoTests": true
+              },
+              "configurations": {
+                "ci": {
+                  "ci": true
+                }
+              },
+              "dependsOn": [
+                {
+                  "target": "graphql-codegen"
+                }
+              ],
+              "parallelism": true
+            },
+            "serve": {
+              "executor": "@nx/next:server",
+              "defaultConfiguration": "development",
+              "options": {
+                "buildTarget": "server:build",
+                "dev": true,
+                "port": 8000
+              },
+              "configurations": {
+                "development": {
+                  "buildTarget": "server:build:development",
+                  "dev": true
+                },
+                "production": {
+                  "buildTarget": "server:build:production",
+                  "dev": false
+                }
+              },
+              "dependsOn": [
+                {
+                  "target": "graphql-codegen"
+                }
+              ],
+              "parallelism": true,
+              "continuous": true
+            },
+            "export": {
+              "executor": "@nx/next:export",
+              "options": {
+                "buildTarget": "server:build:production"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "graphql-codegen": {
+              "executor": "nx:run-commands",
+              "options": {
+                "commands": [
+                  "graphql-codegen --config apps/example/server/codegen.ts"
+                ]
+              },
+              "dependsOn": [
+                {
+                  "target": "get-secrets:testing"
+                }
+              ],
+              "configurations": {},
+              "parallelism": true
+            },
+            "get-secrets:development": {
+              "executor": "@pinecone-intern-monorepo/secrets:get",
+              "defaultConfiguration": "development",
+              "configurations": {
+                "development": {
+                  "groups": [
+                    "server"
+                  ],
+                  "env": "dev"
+                }
+              },
+              "options": {},
+              "parallelism": true
+            },
+            "get-secrets:testing": {
+              "executor": "@pinecone-intern-monorepo/secrets:get",
+              "defaultConfiguration": "testing",
+              "configurations": {
+                "testing": {
+                  "groups": [
+                    "server"
+                  ],
+                  "env": "test"
+                }
+              },
+              "options": {},
+              "parallelism": true
+            },
+            "get-secrets:production": {
+              "executor": "@pinecone-intern-monorepo/secrets:get",
+              "defaultConfiguration": "production",
+              "configurations": {
+                "production": {
+                  "groups": [
+                    "server"
+                  ],
+                  "env": "prod"
+                }
+              },
+              "options": {},
+              "parallelism": true
+            },
+            "export-env": {
+              "executor": "nx:run-commands",
+              "options": {
+                "commands": [
+                  "export $(cat apps/example/server/.env | xargs)"
+                ],
+                "parallel": false
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "clean": {
+              "executor": "nx:run-commands",
+              "options": {
+                "commands": [
+                  "rm -rf dist/apps/example/server",
+                  "rm -rf .vercel"
+                ]
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "deploy-dev": {
+              "executor": "nx:run-commands",
+              "options": {
+                "commands": [
+                  "npx dotenv -v VERCEL_ORG_ID=team_0ASDilhqwPl5fll9OnzqDM30 -v VERCEL_PROJECT_ID=prj_2FoxI3mjkx14N5hgXG6shvCtB29v -- vercel pull --yes --environment=production --token=$VERCEL_TOKEN",
+                  "vercel build --prod --token=$VERCEL_TOKEN",
+                  "npx dotenv -v VERCEL_ORG_ID=team_0ASDilhqwPl5fll9OnzqDM30 -v VERCEL_PROJECT_ID=prj_2FoxI3mjkx14N5hgXG6shvCtB29v -- vercel --prebuilt --prod --token=$VERCEL_TOKEN"
+                ],
+                "parallel": false
+              },
+              "dependsOn": [
+                {
+                  "target": "clean"
+                },
+                {
+                  "target": "graphql-codegen"
+                },
+                {
+                  "target": "export-env"
+                },
+                {
+                  "target": "get-secrets:development"
+                }
+              ],
+              "configurations": {},
+              "parallelism": true
+            },
+            "preview": {
+              "executor": "nx:run-commands",
+              "options": {
+                "commands": [
+                  "npx dotenv -v VERCEL_ORG_ID=team_0ASDilhqwPl5fll9OnzqDM30 -v VERCEL_PROJECT_ID=prj_908aVqj2NLarCpn9ooGMdUpdxUFs -- vercel pull --yes --environment=preview --token=$VERCEL_TOKEN",
+                  "vercel build --token=$VERCEL_TOKEN",
+                  "npx dotenv -v VERCEL_ORG_ID=team_0ASDilhqwPl5fll9OnzqDM30 -v VERCEL_PROJECT_ID=prj_908aVqj2NLarCpn9ooGMdUpdxUFs -- vercel --prebuilt --token=$VERCEL_TOKEN"
+                ],
+                "parallel": false
+              },
+              "dependsOn": [
+                {
+                  "target": "clean"
+                },
+                {
+                  "target": "graphql-codegen"
+                },
+                {
+                  "target": "export-env"
+                },
+                {
+                  "target": "get-secrets:testing"
+                }
+              ],
+              "configurations": {},
+              "parallelism": true
+            },
+            "deploy-testing": {
+              "executor": "nx:run-commands",
+              "options": {
+                "commands": [
+                  "npx dotenv -v VERCEL_ORG_ID=team_0ASDilhqwPl5fll9OnzqDM30 -v VERCEL_PROJECT_ID=prj_908aVqj2NLarCpn9ooGMdUpdxUFs -- vercel pull --yes --environment=production --token=$VERCEL_TOKEN",
+                  "vercel build --prod --token=$VERCEL_TOKEN",
+                  "npx dotenv -v VERCEL_ORG_ID=team_0ASDilhqwPl5fll9OnzqDM30 -v VERCEL_PROJECT_ID=prj_908aVqj2NLarCpn9ooGMdUpdxUFs -- vercel --prebuilt --prod --token=$VERCEL_TOKEN"
+                ],
+                "parallel": false
+              },
+              "dependsOn": [
+                {
+                  "target": "clean"
+                },
+                {
+                  "target": "graphql-codegen"
+                },
+                {
+                  "target": "export-env"
+                },
+                {
+                  "target": "get-secrets:testing"
+                }
+              ],
+              "configurations": {},
+              "parallelism": true
+            },
+            "deploy-prod": {
+              "executor": "nx:run-commands",
+              "options": {
+                "commands": [
+                  "npx dotenv -v VERCEL_ORG_ID=team_0ASDilhqwPl5fll9OnzqDM30 -v VERCEL_PROJECT_ID=prj_j8F2ZBNZMn2wQRAFU7gi3pwY4GU1 -- vercel pull --yes --environment=production --token=$VERCEL_TOKEN",
+                  "vercel build --prod --token=$VERCEL_TOKEN",
+                  "npx dotenv -v VERCEL_ORG_ID=team_0ASDilhqwPl5fll9OnzqDM30 -v VERCEL_PROJECT_ID=prj_j8F2ZBNZMn2wQRAFU7gi3pwY4GU1 -- vercel --prebuilt --prod --token=$VERCEL_TOKEN"
+                ],
+                "parallel": false
+              },
+              "dependsOn": [
+                {
+                  "target": "clean"
+                },
+                {
+                  "target": "get-secrets:production"
+                },
+                {
+                  "target": "export-env"
+                },
+                {
+                  "target": "graphql-codegen"
+                }
+              ],
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "name": "server",
+          "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "apps/example/server",
+          "projectType": "application",
+          "tags": [],
+          "implicitDependencies": []
+        }
+      },
+      "@my-monorepo/books-e2e": {
+        "name": "@my-monorepo/books-e2e",
+        "type": "e2e",
+        "data": {
+          "root": "apps/books-e2e",
+          "targets": {
+            "typecheck": {
+              "dependsOn": [
+                "^typecheck"
+              ],
+              "options": {
+                "cwd": "apps/books-e2e",
+                "command": "tsc --build --emitDeclarationOnly"
+              },
+              "cache": true,
+              "inputs": [
+                "production",
+                "^production"
+              ],
+              "outputs": [
+                "{projectRoot}/out-tsc/cypress/**/*.d.ts",
+                "{projectRoot}/out-tsc/cypress/tsconfig.tsbuildinfo"
+              ],
+              "syncGenerators": [
+                "@nx/js:typescript-sync"
+              ],
+              "metadata": {
+                "technologies": [
+                  "typescript"
+                ],
+                "description": "Runs type-checking for the project.",
+                "help": {
+                  "command": "yarn tsc --build --help",
+                  "example": {
+                    "args": [
+                      "--force"
+                    ]
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "apps/books-e2e",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "^default",
+                "{workspaceRoot}/eslint.config.mjs",
+                "{workspaceRoot}/apps/books-e2e/eslint.config.mjs",
+                "{workspaceRoot}/tools/eslint-rules/**/*",
+                {
+                  "externalDependencies": [
+                    "eslint"
+                  ]
+                }
+              ],
+              "outputs": [
+                "{options.outputFile}"
+              ],
+              "metadata": {
+                "technologies": [
+                  "eslint"
+                ],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "yarn eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "e2e": {
+              "options": {
+                "cwd": "apps/books-e2e",
+                "env": {
+                  "TS_NODE_COMPILER_OPTIONS": "{\"customConditions\":null}"
+                },
+                "command": "cypress run"
+              },
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "cypress"
+                  ]
+                }
+              ],
+              "outputs": [
+                "{projectRoot}/test-output/cypress/videos",
+                "{projectRoot}/test-output/cypress/screenshots"
+              ],
+              "metadata": {
+                "technologies": [
+                  "cypress"
+                ],
+                "description": "Runs Cypress Tests",
+                "help": {
+                  "command": "yarn cypress run --help",
+                  "example": {
+                    "args": [
+                      "--dev",
+                      "--headed"
+                    ]
+                  }
+                }
+              },
+              "dependsOn": [
+                {
+                  "projects": [
+                    "@my-monorepo/books"
+                  ],
+                  "target": "dev"
+                }
+              ],
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "e2e-ci--src/e2e/app.cy.ts": {
+              "outputs": [
+                "{projectRoot}/test-output/cypress/videos/src-e2e-app-cy-ts",
+                "{projectRoot}/test-output/cypress/screenshots/src-e2e-app-cy-ts"
+              ],
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "cypress"
+                  ]
+                }
+              ],
+              "cache": true,
+              "options": {
+                "cwd": "apps/books-e2e",
+                "env": {
+                  "TS_NODE_COMPILER_OPTIONS": "{\"customConditions\":null}"
+                },
+                "command": "cypress run --env webServerCommand=\"yarn nx run @my-monorepo/books:start\" --spec src/e2e/app.cy.ts --config=\"{\\\"baseUrl\\\":\\\"http://localhost:3000\\\",\\\"e2e\\\":{\\\"videosFolder\\\":\\\"test-output/cypress/videos/src-e2e-app-cy-ts\\\",\\\"screenshotsFolder\\\":\\\"test-output/cypress/screenshots/src-e2e-app-cy-ts\\\"}}\""
+              },
+              "metadata": {
+                "technologies": [
+                  "cypress"
+                ],
+                "description": "Runs Cypress Tests in src/e2e/app.cy.ts in CI",
+                "help": {
+                  "command": "yarn cypress run --help",
+                  "example": {
+                    "args": [
+                      "--dev",
+                      "--headed"
+                    ]
+                  }
+                }
+              },
+              "dependsOn": [
+                {
+                  "target": "start",
+                  "projects": [
+                    "@my-monorepo/books"
+                  ]
+                }
+              ],
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "e2e-ci": {
+              "executor": "nx:noop",
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "cypress"
+                  ]
+                }
+              ],
+              "outputs": [
+                "{projectRoot}/test-output/cypress/videos",
+                "{projectRoot}/test-output/cypress/screenshots"
+              ],
+              "dependsOn": [
+                {
+                  "target": "e2e-ci--src/e2e/app.cy.ts",
+                  "projects": "self",
+                  "params": "forward",
+                  "options": "forward"
+                }
+              ],
+              "metadata": {
+                "technologies": [
+                  "cypress"
+                ],
+                "description": "Runs Cypress Tests in CI",
+                "nonAtomizedTarget": "e2e",
+                "help": {
+                  "command": "yarn cypress run --help",
+                  "example": {
+                    "args": [
+                      "--dev",
+                      "--headed"
+                    ]
+                  }
+                }
+              },
+              "configurations": {},
+              "options": {},
+              "parallelism": true
+            },
+            "open-cypress": {
+              "options": {
+                "cwd": "apps/books-e2e",
+                "env": {
+                  "TS_NODE_COMPILER_OPTIONS": "{\"customConditions\":null}"
+                },
+                "command": "cypress open"
+              },
+              "metadata": {
+                "technologies": [
+                  "cypress"
+                ],
+                "description": "Opens Cypress",
+                "help": {
+                  "command": "yarn cypress open --help",
+                  "example": {
+                    "args": [
+                      "--dev",
+                      "--e2e"
+                    ]
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "projectType": "application",
+          "metadata": {
+            "targetGroups": {
+              "E2E (CI)": [
+                "e2e-ci--src/e2e/app.cy.ts",
+                "e2e-ci"
+              ]
+            },
+            "js": {
+              "packageName": "@my-monorepo/books-e2e",
+              "packageVersion": "0.0.1",
+              "isInPackageManagerWorkspaces": true
+            }
+          },
+          "name": "@my-monorepo/books-e2e",
+          "tags": [
+            "npm:private"
+          ],
+          "implicitDependencies": [
+            "@my-monorepo/books"
+          ]
+        }
+      },
+      "@my-monorepo/books": {
+        "name": "@my-monorepo/books",
+        "type": "app",
+        "data": {
+          "root": "apps/books",
+          "targets": {
+            "build": {
+              "options": {
+                "cwd": "apps/books",
+                "tty": false,
+                "command": "next build"
+              },
+              "dependsOn": [
+                "^build"
+              ],
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "next"
+                  ]
+                }
+              ],
+              "outputs": [
+                "{workspaceRoot}/apps/books/.next/!(cache)/**/*",
+                "{workspaceRoot}/apps/books/.next/!(cache)"
+              ],
+              "syncGenerators": [
+                "@nx/js:typescript-sync"
+              ],
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "dev": {
+              "continuous": true,
+              "options": {
+                "cwd": "apps/books",
+                "command": "next dev"
+              },
+              "syncGenerators": [
+                "@nx/js:typescript-sync"
+              ],
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "start": {
+              "continuous": true,
+              "options": {
+                "cwd": "apps/books",
+                "command": "next start"
+              },
+              "dependsOn": [
+                "build"
+              ],
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "serve-static": {
+              "continuous": true,
+              "options": {
+                "cwd": "apps/books",
+                "command": "next start"
+              },
+              "dependsOn": [
+                "build"
+              ],
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "build-deps": {
+              "dependsOn": [
+                "^build"
+              ],
+              "configurations": {},
+              "options": {},
+              "parallelism": true,
+              "executor": "nx:noop"
+            },
+            "watch-deps": {
+              "continuous": true,
+              "dependsOn": [
+                "build-deps"
+              ],
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "yarn nx watch --projects @my-monorepo/books --includeDependentProjects -- yarn nx build-deps @my-monorepo/books"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "apps/books",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "^default",
+                "{workspaceRoot}/eslint.config.mjs",
+                "{workspaceRoot}/apps/books/eslint.config.mjs",
+                "{workspaceRoot}/tools/eslint-rules/**/*",
+                {
+                  "externalDependencies": [
+                    "eslint"
+                  ]
+                }
+              ],
+              "outputs": [
+                "{options.outputFile}"
+              ],
+              "metadata": {
+                "technologies": [
+                  "eslint"
+                ],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "yarn eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test": {
+              "options": {
+                "cwd": "apps/books",
+                "env": {
+                  "TS_NODE_COMPILER_OPTIONS": "{\"moduleResolution\":\"node10\",\"module\":\"commonjs\",\"customConditions\":null}"
+                },
+                "command": "jest"
+              },
+              "metadata": {
+                "technologies": [
+                  "jest"
+                ],
+                "description": "Run Jest Tests",
+                "help": {
+                  "command": "yarn jest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "jest"
+                  ]
+                }
+              ],
+              "outputs": [],
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true,
+              "dependsOn": [
+                "^build"
+              ]
+            }
+          },
+          "name": "@my-monorepo/books",
+          "tags": [
+            "npm:private"
+          ],
+          "metadata": {
+            "targetGroups": {},
+            "js": {
+              "packageName": "@my-monorepo/books",
+              "packageVersion": "0.0.1",
+              "isInPackageManagerWorkspaces": true
+            }
+          },
+          "implicitDependencies": []
+        }
+      }
+    },
+    "dependencies": {
+      "client": [],
+      "server": [],
+      "@my-monorepo/books-e2e": [
+        {
+          "source": "@my-monorepo/books-e2e",
+          "target": "@my-monorepo/books",
+          "type": "implicit"
+        }
+      ],
+      "@my-monorepo/books": []
+    }
+  }
+}

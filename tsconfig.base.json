@@ -1,21 +1,43 @@
 {
+  "compileOnSave": false,
   "compilerOptions": {
-    "composite": true,
-    "declarationMap": true,
-    "emitDeclarationOnly": true,
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
     "importHelpers": true,
-    "isolatedModules": true,
-    "lib": ["es2022"],
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "noEmitOnError": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitOverride": true,
-    "noImplicitReturns": true,
-    "noUnusedLocals": true,
-    "skipLibCheck": true,
-    "strict": true,
+    "esModuleInterop": true,
     "target": "es2022",
-    "customConditions": ["@my-monorepo/source"]
-  }
+    "module": "esnext",
+    "lib": [
+      "es2022",
+      "dom"
+    ],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@pinecone-intern-monorepo/file-management": [
+        "libs/file-management/src/index.ts"
+      ],
+      "@pinecone-intern-monorepo/generator": [
+        "libs/generator/src/index.ts"
+      ],
+      "@pinecone-intern-monorepo/secrets": [
+        "libs/secrets/src/index.ts"
+      ],
+      "@pinecone-intern-monorepo/shadcn": [
+        "libs/shadcn/src/lib/ui/*"
+      ],
+      "@shadcn": [
+        "libs/shadcn/src/index.ts"
+      ]
+    }
+  },
+  "exclude": [
+    "node_modules",
+    "tmp"
+  ]
 }
