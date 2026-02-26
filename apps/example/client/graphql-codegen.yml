@@ -17,3 +17,5 @@ generates:
       withComponent: false
       apolloClientVersion: 3
       useTypeImports: true
+      # --- Доорх мөрийг нэмээрэй ---
+      reactApolloImportFrom: '@apollo/client'
